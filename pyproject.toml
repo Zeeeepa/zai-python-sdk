@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zai"
+version = "1.0.0"
+authors = [
+    {name = "Z.AI SDK Team", email = "support@z.ai"},
+]
+description = "A Python client library for interacting with the Z.AI API"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = ["ai", "api", "client", "chat", "completion", "z.ai", "language-model"]
+dependencies = [
+    "requests>=2.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "black",
+    "flake8",
+    "mypy",
+    "isort",
+]
+
+[project.urls]
+Homepage = "https://github.com/iotbackdoor/zai-python-sdk"
+Documentation = "https://github.com/iotbackdoor/zai-python-sdk#readme"
+Repository = "https://github.com/iotbackdoor/zai-python-sdk"
+"Bug Tracker" = "https://github.com/iotbackdoor/zai-python-sdk/issues"
+
+[tool.setuptools.packages.find]
+include = ["zai*"]
+
+[tool.setuptools.package-data]
+zai = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ['py37']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
