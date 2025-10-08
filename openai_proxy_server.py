@@ -196,15 +196,16 @@ class ZAIClient:
     def _get_guest_token(self) -> Optional[str]:
         """Get guest token from Z.AI."""
         try:
-            response = self.session.post(
+            # Z.AI uses GET request, not POST
+            response = self.session.get(
                 f"{self.base_url}/api/v1/auths/",
-                json={"action": "guest"},
                 timeout=10
             )
             response.raise_for_status()
             data = response.json()
             return data.get("token")
-        except Exception:
+        except Exception as e:
+            print(f"Warning: Failed to get guest token: {e}")
             return None
     
     def _map_model(self, model: str) -> str:
@@ -259,9 +260,24 @@ class ZAIClient:
             return response
         else:
             # Return complete response
-            response = self.session.post(url, json=payload, timeout=60)
-            response.raise_for_status()
-            return response.json()
+            try:
+                response = self.session.post(url, json=payload, timeout=60)
+                print(f"📤 Request to {url}")
+                print(f"📦 Payload: {json.dumps(payload, indent=2)[:500]}")
+                print(f"📥 Response status: {response.status_code}")
+                print(f"📄 Response headers: {dict(response.headers)}")
+                print(f"📝 Response text: {response.text[:1000]}")
+                
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.HTTPError as e:
+                print(f"❌ HTTP Error: {e}")
+                print(f"Response: {e.response.text[:500] if hasattr(e, 'response') else 'N/A'}")
+                raise
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON Decode Error: {e}")
+                print(f"Response text: {response.text[:500]}")
+                raise
 
 
 # ============================================================================
