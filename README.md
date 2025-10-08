@@ -228,3 +228,174 @@ Developed by [iotbackdoor](https://github.com/iotbackdoor)
 ## Support
 
 For issues, questions, or suggestions, please open an issue on the [GitHub repository](https://github.com/iotbackdoor/zai-python-sdk).
+## 🆕 OpenAI-Compatible Server
+
+The SDK now includes a FastAPI server that provides an OpenAI-compatible API interface. This allows you to use the standard OpenAI Python client library with Z.AI models!
+
+### Quick Start with OpenAI Client
+
+```bash
+# 1. Install dependencies
+pip install -r requirements-server.txt
+pip install openai
+
+# 2. Start the server
+cd server && python run_server.py
+```
+
+```python
+# 3. Use OpenAI client with Z.AI backend
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:7000/v1",
+    api_key="dummy"  # Optional, can use your Z.AI token
+)
+
+response = client.chat.completions.create(
+    model="glm-4.6",
+    messages=[{"role": "user", "content": "What is your model name?"}]
+)
+print(response.choices[0].message.content)
+```
+
+### Features
+
+✅ Full OpenAI Chat Completions API compatibility  
+✅ Streaming and non-streaming responses  
+✅ Model name mapping (gpt-4 → Z.AI models)  
+✅ `/v1/chat/completions` endpoint  
+✅ `/v1/models` endpoint  
+✅ Works with any OpenAI-compatible client  
+
+### Model Mapping
+
+| OpenAI Model | Z.AI Model |
+|--------------|------------|
+| gpt-4, gpt-4-turbo | 0727-360B-API |
+| gpt-3.5-turbo | glm-4.5v |
+| glm-4.5, glm-4.5v, glm-4.6 | glm-4.5v |
+
+### Streaming Example
+
+```python
+stream = client.chat.completions.create(
+    model="glm-4.5v",
+    messages=[{"role": "user", "content": "Write a poem"}],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
+```
+
+### Configuration
+
+Environment variables:
+
+```bash
+HOST=0.0.0.0          # Server host
+PORT=7000             # Server port
+ZAI_BASE_URL=https://chat.z.ai  # Z.AI API URL
+DEFAULT_MODEL=glm-4.5v  # Default model
+```
+
+### Testing
+
+Verify the server works correctly:
+
+```bash
+python test_openai_server.py
+```
+
+See `examples/openai_client_example.py` for more usage examples.
+
+
+---
+
+## 🔥 OpenAI Compatibility
+
+**NEW:** Use Z.AI with the OpenAI Python client! Drop-in replacement for OpenAI API.
+
+### Quick Start with OpenAI Client
+
+1. **Start the OpenAI-compatible proxy server:**
+   ```bash
+   python openai_proxy_server.py
+   ```
+
+2. **Use OpenAI Python client:**
+   ```python
+   from openai import OpenAI
+   
+   # Initialize client with Z.AI proxy
+   client = OpenAI(
+       base_url="http://localhost:7000/v1",
+       api_key="your-z-ai-api-key"
+   )
+   
+   # Use exactly like OpenAI!
+   response = client.chat.completions.create(
+       model="glm-4.5",
+       messages=[{"role": "user", "content": "Hello!"}]
+   )
+   print(response.choices[0].message.content)
+   ```
+
+3. **Streaming responses:**
+   ```python
+   stream = client.chat.completions.create(
+       model="glm-4.5",
+       messages=[{"role": "user", "content": "Tell me a story"}],
+       stream=True
+   )
+   
+   for chunk in stream:
+       if chunk.choices[0].delta.content:
+           print(chunk.choices[0].delta.content, end="", flush=True)
+   ```
+
+### Model Mappings
+
+The proxy automatically maps popular OpenAI model names to Z.AI models:
+
+| OpenAI Model | Z.AI Model |
+|--------------|------------|
+| `gpt-4` | `0727-360B-API` |
+| `gpt-4-turbo` | `0727-360B-API` |
+| `gpt-3.5-turbo` | `glm-4.5v` |
+| `glm-4.5` | `glm-4.5v` |
+| `glm-4.5v` | `glm-4.5v` |
+| `glm-4.6` | `glm-4.5v` |
+
+### Testing OpenAI Compatibility
+
+Run the compatibility test suite:
+```bash
+# Install dependencies
+pip install openai fastapi uvicorn
+
+# Start the server (in one terminal)
+python openai_proxy_server.py
+
+# Run tests (in another terminal)
+python test_openai_compatibility.py
+```
+
+### Server Configuration
+
+Configure the server using environment variables:
+```bash
+export HOST="0.0.0.0"           # Server host (default: 0.0.0.0)
+export PORT="7000"               # Server port (default: 7000)
+export ZAI_BASE_URL="https://..." # Z.AI API base URL
+```
+
+### API Documentation
+
+Once the server is running, visit:
+- Interactive API docs: `http://localhost:7000/docs`
+- Health check: `http://localhost:7000/health`
+- List models: `http://localhost:7000/v1/models`
+
