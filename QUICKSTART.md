@@ -26,7 +26,17 @@ You should see:
 📚 API Documentation: http://0.0.0.0:7000/docs
 ```
 
-### Step 2: Use OpenAI Client in Your Code
+### Step 2: Get Z.AI API Key (Optional)
+
+The proxy will automatically try to get a guest token from Z.AI. However, for production use or if guest tokens are not available, you should use your own API key.
+
+To get your Z.AI API key:
+1. Visit https://chat.z.ai
+2. Open browser developer tools (F12)
+3. Go to Application → Local Storage → https://chat.z.ai
+4. Find the `token` key - this is your API key
+
+### Step 3: Use OpenAI Client in Your Code
 
 **Your exact use case:**
 
@@ -36,7 +46,7 @@ from openai import OpenAI
 # Initialize client
 client = OpenAI(
     base_url="http://localhost:7000/v1",
-    api_key="your-z-ai-api-key"  # or any string for testing
+    api_key="your-z-ai-token"  # Use token from chat.z.ai or let server get guest token
 )
 
 # Make a request (exactly as you specified)
@@ -183,4 +193,3 @@ For issues or questions:
 ---
 
 **Note:** This proxy server makes Z.AI accessible through the standard OpenAI Python client, enabling drop-in replacement for any application using OpenAI's API.
-

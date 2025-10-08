@@ -44,8 +44,8 @@ class Config:
     PORT = int(os.getenv("PORT", "7000"))
     
     # Z.AI API settings
-    ZAI_BASE_URL = os.getenv("ZAI_BASE_URL", "https://glm-4-5v-api.lingyiwanwu.com")
-    ZAI_CHAT_ENDPOINT = "/v4/chat/completions"
+    ZAI_BASE_URL = os.getenv("ZAI_BASE_URL", "https://chat.z.ai")
+    ZAI_CHAT_ENDPOINT = "/api/chat/completions"
     
     # Model mappings (OpenAI model names -> Z.AI model names)
     MODEL_MAPPINGS = {
@@ -161,10 +161,51 @@ class ZAIClient:
         self.api_key = api_key
         self.base_url = Config.ZAI_BASE_URL
         self.session = requests.Session()
+        
+        # Z.AI requires browser-like headers
         self.session.headers.update({
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "accept-language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "content-type": "application/json",
+            "pragma": "no-cache",
+            "referer": "https://chat.z.ai/",
+            "sec-ch-ua": '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         })
+        
+        # Try to get guest token if no API key provided
+        if not api_key or api_key == "dummy-key":
+            try:
+                guest_token = self._get_guest_token()
+                if guest_token:
+                    self.api_key = guest_token
+                    api_key = guest_token
+            except Exception:
+                pass  # Use provided key even if guest token fails
+        
+        # Set authorization header
+        self.session.headers["authorization"] = f"Bearer {api_key}"
+    
+    def _get_guest_token(self) -> Optional[str]:
+        """Get guest token from Z.AI."""
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/v1/auths/",
+                json={"action": "guest"},
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("token")
+        except Exception:
+            return None
     
     def _map_model(self, model: str) -> str:
         """Map OpenAI model name to Z.AI model name."""
@@ -182,17 +223,34 @@ class ZAIClient:
         """Create a chat completion."""
         url = f"{self.base_url}{Config.ZAI_CHAT_ENDPOINT}"
         
-        # Build request payload
+        # Build Z.AI-compatible request payload
+        # Z.AI expects a more complex structure than OpenAI
         payload = {
+            "stream": stream,
             "model": self._map_model(model),
             "messages": messages,
-            "temperature": temperature,
-            "top_p": top_p,
-            "stream": stream,
+            "params": {
+                "temperature": temperature,
+                "top_p": top_p,
+            },
+            "features": {
+                "image_generation": False,
+                "web_search": False,
+                "auto_web_search": False,
+                "preview_mode": True,
+                "flags": [],
+                "thinking": {"enabled": True, "budget_tokens": 0}
+            },
+            "variables": {},
+            "model_item": {
+                "id": self._map_model(model),
+                "name": self._map_model(model),
+            },
+            "chat_id": str(uuid.uuid4())
         }
         
         if max_tokens:
-            payload["max_tokens"] = max_tokens
+            payload["params"]["max_tokens"] = max_tokens
         
         if stream:
             # Return streaming response
@@ -403,4 +461,3 @@ if __name__ == "__main__":
         port=Config.PORT,
         log_level="info",
     )
-
