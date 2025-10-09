@@ -109,12 +109,12 @@ if [ ! -f "$CONFIG_FILE" ]; then
     read -p "$(echo -e ${BLUE}API Key (optional):${NC}) " ZAI_API_KEY
     
     read -p "$(echo -e ${BLUE}Z.AI Base URL [https://z.hhgzs.com/api/v1]:${NC}) " ZAI_BASE_URL
-    ZAI_BASE_URL="${ZAI_BASE_URL:-https://z.hhgzs.com/api/v1}"
+    ZAI_BASE_URL="${ZAI_BASE_URL:-https://z.hhgzs.com/api/v1"
     
     echo ""
     echo -e "${CYAN}Available models: glm-4.5v, GLM-4-6-API-V1, 0727-360B-API${NC}"
     read -p "$(echo -e ${BLUE}Default model [glm-4.5v]:${NC}) " DEFAULT_MODEL
-    DEFAULT_MODEL="${DEFAULT_MODEL:-glm-4.5v}"
+    DEFAULT_MODEL="${DEFAULT_MODEL:-glm-4.5v"
     
     # Save configuration
     cat > "$CONFIG_FILE" << EOF
