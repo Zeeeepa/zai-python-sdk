@@ -1,0 +1,144 @@
+#!/bin/bash
+# Z.AI OpenAI-Compatible API - Full Deployment & Test Script
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+REPO="Zeeeepa/zai-python-sdk"
+BRANCH="${1:-main}"
+PROJECT_DIR="zai-openai-api"
+
+clear
+echo ""
+echo "============================================================"
+echo -e "${CYAN}🚀 Z.AI OpenAI-Compatible API - Full Deployment${NC}"
+echo "============================================================"
+echo "Repository: $REPO"
+echo "Branch: $BRANCH"
+echo ""
+
+# Step 1: Clone
+echo "Step 1: Cloning Repository..."
+if [ -d "$PROJECT_DIR" ]; then
+    rm -rf "$PROJECT_DIR"
+fi
+git clone --depth 1 --branch "$BRANCH" "https://github.com/${REPO}.git" "$PROJECT_DIR"
+cd "$PROJECT_DIR"
+echo -e "${GREEN}✅ Cloned${NC}"
+echo ""
+
+# Step 2: Configure with defaults
+echo "Step 2: Creating Configuration..."
+cat > .env.zai << 'EOF'
+SERVER_HOST="0.0.0.0"
+SERVER_PORT="7000"
+ZAI_API_KEY=""
+ZAI_BASE_URL="https://z.hhgzs.com/api/v1"
+DEFAULT_MODEL="glm-4.5v"
+TIMEOUT="10"
+EOF
+
+source .env.zai
+export SERVER_HOST SERVER_PORT ZAI_API_KEY ZAI_BASE_URL DEFAULT_MODEL TIMEOUT
+echo -e "${GREEN}✅ Configured (host:$SERVER_HOST port:$SERVER_PORT model:$DEFAULT_MODEL)${NC}"
+echo ""
+
+# Step 3: Create virtual environment
+echo "Step 3: Creating Virtual Environment..."
+python3 -m venv .venv
+source .venv/bin/activate
+echo -e "${GREEN}✅ Virtual environment created${NC}"
+echo ""
+
+# Step 4: Install dependencies
+echo "Step 4: Installing Dependencies..."
+.venv/bin/pip install -q fastapi uvicorn requests pydantic openai 2>&1 | grep -v "already satisfied" | head -3 || true
+echo -e "${GREEN}✅ Installed${NC}"
+echo ""
+
+# Step 5: Start server
+echo "Step 5: Starting Server..."
+.venv/bin/python openai_standalone_server_with_fallback.py > deployment.log 2>&1 &
+SERVER_PID=$!
+echo $SERVER_PID > .deployment.pid
+echo "Server PID: $SERVER_PID"
+
+# Wait for startup
+echo -n "Waiting for server to be ready"
+for i in {1..15}; do
+    if curl -s http://localhost:7000/health >/dev/null 2>&1; then
+        echo ""
+        echo -e "${GREEN}✅ Server Running${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 1
+done
+echo ""
+echo ""
+
+# Step 6: Run your exact test code
+echo "Step 6: Running Your Test Code..."
+echo "============================================================"
+echo ""
+
+.venv/bin/python << 'PYTEST'
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:7000/v1",
+    api_key="dummy"
+)
+
+response = client.chat.completions.create(
+    model="glm-4.5v",
+    messages=[{"role": "user", "content": "What is your model name?"}]
+)
+
+print(response)
+PYTEST
+
+echo ""
+echo "============================================================"
+echo -e "${GREEN}✅ TEST COMPLETED!${NC}"
+echo "============================================================"
+echo ""
+
+echo "Server Information:"
+echo "  • URL: http://localhost:7000"
+echo "  • Health: http://localhost:7000/health"
+echo "  • Docs: http://localhost:7000/docs"
+echo "  • PID: $SERVER_PID"
+echo "  • Logs: deployment.log"
+echo ""
+echo "To run the test again:"
+echo -e "  ${YELLOW}.venv/bin/python -c '${NC}"
+echo -e "${CYAN}from openai import OpenAI${NC}"
+echo -e "${CYAN}client = OpenAI(base_url=\"http://localhost:7000/v1\", api_key=\"dummy\")${NC}"
+echo -e "${CYAN}response = client.chat.completions.create(model=\"glm-4.5v\", messages=[{\"role\": \"user\", \"content\": \"What is your model name?\"}])${NC}"
+echo -e "${CYAN}print(response)${NC}"
+echo -e "  ${YELLOW}'${NC}"
+echo ""
+echo "To stop server: kill $SERVER_PID"
+echo ""
+echo -e "${GREEN}Server running in background. Press Ctrl+C to exit.${NC}"
+echo ""
+
+# Monitor
+trap "echo ''; echo 'Monitoring stopped. Server still running (PID: $SERVER_PID)'; exit 0" INT
+
+while true; do
+    if ! kill -0 $SERVER_PID 2>/dev/null; then
+        echo "Server stopped!"
+        exit 1
+    fi
+    REQS=$(grep -c "POST\|GET" deployment.log 2>/dev/null || echo "0")
+    echo -ne "\r✅ Server alive - Requests: $REQS - $(date '+%H:%M:%S')  "
+    sleep 5
+done
+
