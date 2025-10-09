@@ -2,6 +2,25 @@
 
 A Python client library for interacting with the Z.AI API, providing easy access to advanced language models for chat completions, streaming responses, and more.
 
+## 🎉 NEW: OpenAI-Compatible Server!
+
+Transform Z.AI into an OpenAI-compatible API! Use the standard OpenAI Python client:
+
+```python
+from openai import OpenAI
+
+# Start server: python openai_standalone_server.py
+client = OpenAI(base_url="http://localhost:7000/v1", api_key="dummy")
+response = client.chat.completions.create(
+    model="glm-4.5",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+📖 **[Full OpenAI Server Documentation →](README_OPENAI_SERVER.md)**
+
+---
+
 ## Installation
 
 ```bash
@@ -398,4 +417,3 @@ Once the server is running, visit:
 - Interactive API docs: `http://localhost:7000/docs`
 - Health check: `http://localhost:7000/health`
 - List models: `http://localhost:7000/v1/models`
-
