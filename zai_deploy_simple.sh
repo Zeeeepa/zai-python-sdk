@@ -47,15 +47,22 @@ export SERVER_HOST SERVER_PORT ZAI_API_KEY ZAI_BASE_URL DEFAULT_MODEL TIMEOUT
 echo -e "${GREEN}✅ Configured (host:$SERVER_HOST port:$SERVER_PORT model:$DEFAULT_MODEL)${NC}"
 echo ""
 
-# Step 3: Install dependencies
-echo "Step 3: Installing Dependencies..."
-pip install -q fastapi uvicorn requests pydantic openai 2>&1 | grep -v "already satisfied" | head -3 || true
+# Step 3: Create virtual environment
+echo "Step 3: Creating Virtual Environment..."
+python3 -m venv .venv
+source .venv/bin/activate
+echo -e "${GREEN}✅ Virtual environment created${NC}"
+echo ""
+
+# Step 4: Install dependencies
+echo "Step 4: Installing Dependencies..."
+.venv/bin/pip install -q fastapi uvicorn requests pydantic openai 2>&1 | grep -v "already satisfied" | head -3 || true
 echo -e "${GREEN}✅ Installed${NC}"
 echo ""
 
-# Step 4: Start server
-echo "Step 4: Starting Server..."
-python openai_standalone_server_with_fallback.py > deployment.log 2>&1 &
+# Step 5: Start server
+echo "Step 5: Starting Server..."
+.venv/bin/python openai_standalone_server_with_fallback.py > deployment.log 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > .deployment.pid
 echo "Server PID: $SERVER_PID"
@@ -70,10 +77,10 @@ done
 echo -e "${GREEN}✅ Server Running${NC}"
 echo ""
 
-# Step 5: Validate
-echo "Step 5: Validation with OpenAI Client..."
+# Step 6: Validate
+echo "Step 6: Validation with OpenAI Client..."
 echo "============================================================"
-python << 'PYTEST'
+.venv/bin/python << 'PYTEST'
 from openai import OpenAI
 import json
 

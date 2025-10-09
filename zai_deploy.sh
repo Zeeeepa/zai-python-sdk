@@ -138,20 +138,36 @@ export SERVER_HOST SERVER_PORT ZAI_API_KEY ZAI_BASE_URL DEFAULT_MODEL TIMEOUT
 
 echo ""
 
-# Step 3: Install dependencies
+# Step 3: Create virtual environment
 echo "============================================================"
-echo -e "${BLUE}📦 Step 3: Installing Dependencies${NC}"
+echo -e "${BLUE}🐍 Step 3: Creating Virtual Environment${NC}"
+echo "============================================================"
+echo ""
+
+if [ ! -d ".venv" ]; then
+    echo -e "${CYAN}Creating virtual environment...${NC}"
+    python3 -m venv .venv
+    echo -e "${GREEN}✅ Virtual environment created${NC}"
+else
+    echo -e "${YELLOW}Virtual environment already exists${NC}"
+fi
+source .venv/bin/activate
+echo ""
+
+# Step 4: Install dependencies
+echo "============================================================"
+echo -e "${BLUE}📦 Step 4: Installing Dependencies${NC}"
 echo "============================================================"
 echo ""
 
 echo -e "${CYAN}Installing required packages...${NC}"
-pip install -q fastapi uvicorn requests pydantic openai 2>&1 | grep -v "already satisfied" || true
+.venv/bin/pip install -q fastapi uvicorn requests pydantic openai 2>&1 | grep -v "already satisfied" || true
 echo -e "${GREEN}✅ Dependencies installed${NC}"
 echo ""
 
-# Step 4: Check port
+# Step 5: Check port
 echo "============================================================"
-echo -e "${BLUE}🔍 Step 4: Checking Port Availability${NC}"
+echo -e "${BLUE}🔍 Step 5: Checking Port Availability${NC}"
 echo "============================================================"
 echo ""
 
@@ -173,14 +189,14 @@ else
 fi
 echo ""
 
-# Step 5: Start server
+# Step 6: Start server
 echo "============================================================"
-echo -e "${BLUE}🚀 Step 5: Starting OpenAI-Compatible Server${NC}"
+echo -e "${BLUE}🚀 Step 6: Starting OpenAI-Compatible Server${NC}"
 echo "============================================================"
 echo ""
 
 echo -e "${CYAN}Launching server...${NC}"
-python openai_standalone_server_with_fallback.py > deployment.log 2>&1 &
+.venv/bin/python openai_standalone_server_with_fallback.py > deployment.log 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > .deployment.pid
 
@@ -206,9 +222,9 @@ done
 echo ""
 echo ""
 
-# Step 6: Validate with actual OpenAI API usage
+# Step 7: Validate with actual OpenAI API usage
 echo "============================================================"
-echo -e "${MAGENTA}✨ Step 6: Validation with Real OpenAI Client${NC}"
+echo -e "${MAGENTA}✨ Step 7: Validation with Real OpenAI Client${NC}"
 echo "============================================================"
 echo ""
 
@@ -402,14 +418,14 @@ PYEOF
 chmod +x validate_deployment.py
 
 # Run validation
-python validate_deployment.py
+.venv/bin/python validate_deployment.py
 VALIDATION_EXIT=$?
 
 echo ""
 
-# Step 7: Final status
+# Step 8: Final status
 echo "============================================================"
-echo -e "${BLUE}📊 Step 7: Deployment Status${NC}"
+echo -e "${BLUE}📊 Step 8: Deployment Status${NC}"
 echo "============================================================"
 echo ""
 
@@ -533,4 +549,3 @@ while true; do
     
     sleep 5
 done
-
