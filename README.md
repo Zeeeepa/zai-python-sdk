@@ -2,6 +2,61 @@
 
 A Python client library for interacting with the Z.AI API, providing easy access to advanced language models for chat completions, streaming responses, and more.
 
+
+## 🚀 One-Command Deployment (EXANOKE Format)
+
+Deploy the entire SDK with a single command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Zeeeepa/zai-python-sdk/main/zai_deploy_simple.sh -o zai_deploy.sh
+bash zai_deploy.sh main
+```
+
+Or deploy a specific branch:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Zeeeepa/zai-python-sdk/codegen-bot/exanoke-deployment-script-1760018725/zai_deploy_simple.sh -o zai_deploy.sh
+bash zai_deploy.sh codegen-bot/exanoke-deployment-script-1760018725
+```
+
+### What the Deployment Script Does
+
+- ✅ **Auto-installs** system dependencies (git, python3, pip, venv)
+- ✅ **Clones repository** to `/opt/zai-python-sdk`
+- ✅ **Sets up** Python virtual environment
+- ✅ **Installs** all requirements
+- ✅ **Creates** systemd service for production
+- ✅ **Generates** OpenAI test client (`test_openai_client.py`) in your current directory
+- ✅ **Runs** automated tests and displays results
+- ✅ **Provides** comprehensive usage information
+
+### Auto-Generated Test Client
+
+After deployment, test with the OpenAI-compatible client created in your directory:
+
+```python
+# The script creates test_openai_client.py for you
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:7000/v1",
+    api_key="test-api-key"
+)
+
+response = client.completions.create(
+    model="glm-4.5V",
+    prompt="What is your model name?"
+)
+print(response)
+```
+
+Run it:
+```bash
+python3 test_openai_client.py
+```
+
+---
+
 ## Installation
 
 ```bash
