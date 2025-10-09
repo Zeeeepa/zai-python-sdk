@@ -180,7 +180,7 @@ echo "============================================================"
 echo ""
 
 echo -e "${CYAN}Launching server...${NC}"
-python openai_standalone_server.py > deployment.log 2>&1 &
+python openai_standalone_server_with_fallback.py > deployment.log 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > .deployment.pid
 
