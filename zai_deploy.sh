@@ -39,7 +39,8 @@ echo ""
 
 if [ -d "$PROJECT_DIR" ]; then
     echo -e "${YELLOW}⚠️  Directory $PROJECT_DIR already exists${NC}"
-    read -p "$(echo -e ${YELLOW}Remove and re-clone? [Y/n]:${NC}) " remove_dir
+    echo -ne "${YELLOW}Remove and re-clone? [Y/n]:${NC} "
+    read remove_dir
     remove_dir="${remove_dir:-Y}"
     
     if [[ "$remove_dir" =~ ^[Yy]$ ]]; then
@@ -85,7 +86,8 @@ if [ -f "$CONFIG_FILE" ]; then
     echo "  - Server: ${SERVER_HOST}:${SERVER_PORT}"
     echo "  - Model: ${DEFAULT_MODEL}"
     echo ""
-    read -p "$(echo -e ${YELLOW}Use existing configuration? [Y/n]:${NC}) " use_config
+    echo -ne "${YELLOW}Use existing configuration? [Y/n]:${NC} "
+    read use_config
     use_config="${use_config:-Y}"
     
     if [[ ! "$use_config" =~ ^[Yy]$ ]]; then
@@ -98,23 +100,28 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo -e "${CYAN}Please provide configuration:${NC}"
     echo ""
     
-    read -p "$(echo -e ${BLUE}Server host [0.0.0.0]:${NC}) " SERVER_HOST
+    echo -ne "${BLUE}Server host [0.0.0.0]:${NC} "
+    read SERVER_HOST
     SERVER_HOST="${SERVER_HOST:-0.0.0.0}"
     
-    read -p "$(echo -e ${BLUE}Server port [7000]:${NC}) " SERVER_PORT
+    echo -ne "${BLUE}Server port [7000]:${NC} "
+    read SERVER_PORT
     SERVER_PORT="${SERVER_PORT:-7000}"
     
     echo ""
     echo -e "${CYAN}Z.AI API Key (leave empty for guest auth):${NC}"
-    read -p "$(echo -e ${BLUE}API Key (optional):${NC}) " ZAI_API_KEY
+    echo -ne "${BLUE}API Key (optional):${NC} "
+    read ZAI_API_KEY
     
-    read -p "$(echo -e ${BLUE}Z.AI Base URL [https://z.hhgzs.com/api/v1]:${NC}) " ZAI_BASE_URL
-    ZAI_BASE_URL="${ZAI_BASE_URL:-https://z.hhgzs.com/api/v1"
+    echo -ne "${BLUE}Z.AI Base URL [https://z.hhgzs.com/api/v1]:${NC} "
+    read ZAI_BASE_URL
+    ZAI_BASE_URL="${ZAI_BASE_URL:-https://z.hhgzs.com/api/v1}"
     
     echo ""
     echo -e "${CYAN}Available models: glm-4.5v, GLM-4-6-API-V1, 0727-360B-API${NC}"
-    read -p "$(echo -e ${BLUE}Default model [glm-4.5v]:${NC}) " DEFAULT_MODEL
-    DEFAULT_MODEL="${DEFAULT_MODEL:-glm-4.5v"
+    echo -ne "${BLUE}Default model [glm-4.5v]:${NC} "
+    read DEFAULT_MODEL
+    DEFAULT_MODEL="${DEFAULT_MODEL:-glm-4.5v}"
     
     # Save configuration
     cat > "$CONFIG_FILE" << EOF
@@ -173,7 +180,8 @@ echo ""
 
 if lsof -Pi :$SERVER_PORT -sTCP:LISTEN -t >/dev/null 2>&1 ; then
     echo -e "${YELLOW}⚠️  Port $SERVER_PORT is in use${NC}"
-    read -p "$(echo -e ${YELLOW}Kill existing process? [Y/n]:${NC}) " kill_process
+    echo -ne "${YELLOW}Kill existing process? [Y/n]:${NC} "
+    read kill_process
     kill_process="${kill_process:-Y}"
     
     if [[ "$kill_process" =~ ^[Yy]$ ]]; then
