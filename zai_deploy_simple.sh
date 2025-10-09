@@ -219,6 +219,95 @@ run_tests() {
     log_success "Tests completed"
 }
 
+create_test_client() {
+    local script_dir="$(pwd)"
+    local test_script="$script_dir/test_openai_client.py"
+    
+    log_info "Creating OpenAI test client script..."
+    
+    cat > "$test_script" <<'EOF'
+#!/usr/bin/env python3
+"""
+OpenAI API Test Client
+Tests the deployed ZAI service using OpenAI SDK
+"""
+
+from openai import OpenAI
+
+def test_openai_client():
+    print("\n" + "="*60)
+    print("🚀 Testing OpenAI Client with ZAI Backend")
+    print("="*60 + "\n")
+    
+    # Initialize OpenAI client with custom base URL
+    client = OpenAI(
+        base_url="http://localhost:7000/v1",
+        api_key="test-api-key"  # Can be any string for testing
+    )
+    
+    print("📡 Sending request to: http://localhost:7000/v1")
+    print("🤖 Model: glm-4.5V")
+    print("💬 Prompt: What is your model name?\n")
+    
+    try:
+        # Create completion request
+        response = client.completions.create(
+            model="glm-4.5V",
+            prompt="What is your model name?"
+        )
+        
+        print("✅ Response received!\n")
+        print("="*60)
+        print("📋 Full Response:")
+        print("="*60)
+        print(response)
+        print("\n" + "="*60)
+        print("✅ Test completed successfully!")
+        print("="*60 + "\n")
+        
+        return True
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}\n")
+        print("💡 Make sure the server is running on http://localhost:7000")
+        print("💡 Check the logs for more details\n")
+        return False
+
+if __name__ == "__main__":
+    test_openai_client()
+EOF
+    
+    chmod +x "$test_script"
+    log_success "Test client created at: $test_script"
+    
+    return 0
+}
+
+run_test_client() {
+    local script_dir="$(pwd)"
+    local test_script="$script_dir/test_openai_client.py"
+    
+    log_info "Running OpenAI test client..."
+    echo ""
+    
+    cd "$INSTALL_DIR"
+    source venv/bin/activate
+    
+    # Install openai package if not present
+    if ! pip show openai &> /dev/null; then
+        log_info "Installing OpenAI package..."
+        pip install openai > /dev/null 2>&1
+    fi
+    
+    # Run the test script
+    python3 "$test_script" || {
+        log_warning "Test client execution failed"
+        return 1
+    }
+    
+    return 0
+}
+
 print_usage() {
     log_info "==================================================="
     log_info "ZAI Python SDK - Successfully Deployed!"
@@ -226,19 +315,18 @@ print_usage() {
     echo ""
     log_info "Installation Directory: $INSTALL_DIR"
     log_info "Log File: $LOG_FILE"
+    log_info "Test Script: $(pwd)/test_openai_client.py"
     echo ""
     log_info "Quick Start:"
     echo ""
     echo "  # Activate virtual environment"
     echo "  source $INSTALL_DIR/venv/bin/activate"
     echo ""
-    echo "  # Run example"
-    echo "  python3 -m zai.example"
+    echo "  # Run test client"
+    echo "  python3 $(pwd)/test_openai_client.py"
     echo ""
-    echo "  # Or use in your code"
-    echo "  from zai.client import ZAIClient"
-    echo "  client = ZAIClient()"
-    echo "  response = client.chat('Hello!')"
+    echo "  # Or run example"
+    echo "  python3 -m zai.example"
     echo ""
     log_info "Service Management:"
     echo ""
@@ -296,7 +384,13 @@ main() {
     create_systemd_service
     start_service
     
-    # Step 6: Print usage information
+    # Step 6: Create test client script
+    create_test_client
+    
+    # Step 7: Run test client
+    run_test_client
+    
+    # Step 8: Print usage information
     echo ""
     print_usage
     
@@ -305,4 +399,3 @@ main() {
 
 # Run main function with all arguments
 main "$@"
-
