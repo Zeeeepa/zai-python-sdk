@@ -1,42 +1,3 @@
-#!/bin/bash
-#
-# start.sh - Start Z.AI OpenAI-compatible API Server
-#
-
-set -e
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
-PID_FILE="$SCRIPT_DIR/.server.pid"
-LOG_FILE="$SCRIPT_DIR/server.log"
-PORT=${1:-8080}
-
-echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   Starting Z.AI OpenAI API Server on port $PORT                ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}"
-echo ""
-
-# Check if server is already running
-if [ -f "$PID_FILE" ]; then
-    OLD_PID=$(cat "$PID_FILE")
-    if ps -p "$OLD_PID" > /dev/null 2>&1; then
-        echo -e "${YELLOW}⚠ Server already running (PID: $OLD_PID)${NC}"
-        echo "Stop it first with: kill $OLD_PID"
-        exit 1
-    fi
-fi
-
-# Create server if it doesn't exist
-if [ ! -f "zai_server.py" ]; then
-    echo "Creating server..."
-    cat > zai_server.py << 'PYEOF'
 #!/usr/bin/env python3
 """Z.AI OpenAI-Compatible API Server"""
 import os, json, uuid, time, httpx
@@ -155,35 +116,3 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("SERVER_PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
-PYEOF
-    chmod +x zai_server.py
-fi
-
-# Start server in background
-echo "Starting server..."
-python3 zai_server.py > "$LOG_FILE" 2>&1 &
-SERVER_PID=$!
-echo $SERVER_PID > "$PID_FILE"
-
-# Wait for server to start
-echo "Waiting for server..."
-for i in {1..10}; do
-    if curl -s "http://localhost:$PORT/health" > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ Server started (PID: $SERVER_PID)${NC}"
-        echo ""
-        echo -e "  Health: ${BLUE}http://localhost:$PORT/health${NC}"
-        echo -e "  Models: ${BLUE}http://localhost:$PORT/v1/models${NC}"
-        echo -e "  Chat:   ${BLUE}http://localhost:$PORT/v1/chat/completions${NC}"
-        echo ""
-        echo -e "  Logs:   ${BLUE}tail -f $LOG_FILE${NC}"
-        echo -e "  Stop:   ${BLUE}kill $SERVER_PID${NC}"
-        echo ""
-        exit 0
-    fi
-    sleep 1
-done
-
-echo -e "${RED}✗ Server failed to start${NC}"
-echo "Check logs: cat $LOG_FILE"
-exit 1
-
